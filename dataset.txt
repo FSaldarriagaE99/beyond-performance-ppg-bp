@@ -1,0 +1,17 @@
+Dataset: PulseDB / VitalDB
+===========================
+
+Source (download instructions, license, full dataset):
+https://github.com/pulselabteam/PulseDB
+
+Partitions used in this project (PulseDB VitalDB supplementary subsets):
+- VitalDB_CalFree_Test_Subset
+- VitalDB_Train_Subset
+
+These correspond to the .h5 files loaded by Scripts/bp_lgbm/data.py's
+load_PulseDB_sup_ds() (e.g. Features_VitalDB_Train_Subset.h5,
+Features_VitalDB_CalFree_Test_Subset.h5, and the Clean_Features_*.h5
+outputs produced from them by Scripts/fiducial_quality_filtering/).
+Place the downloaded .h5 files in the folder pointed to by
+PULSE_DB_SUP_DIR in Scripts/bp_lgbm/local_paths.py (see
+local_paths.py.example).

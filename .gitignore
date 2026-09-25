@@ -1,0 +1,26 @@
+# Machine-local configuration (copy from local_paths.py.example)
+Scripts/bp_lgbm/local_paths.py
+Scripts/fiducial_quality_filtering/local_paths.py
+
+# Data files (not distributed - see README for the PulseDB/VitalDB access process)
+*.h5
+Scripts/bp_lgbm/data_features/
+
+# Generated result/output directories
+CV_results*
+configs
+shap_results
+Bland_Altman_results
+Scripts/fiducial_quality_filtering/outputs/
+Scripts/fiducial_quality_filtering/*.log
+
+# results/ folder structure is tracked (.gitkeep placeholders); its
+# generated contents are not
+results/*/*
+!results/*/.gitkeep
+
+# Python environment / cache
+.venv310/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

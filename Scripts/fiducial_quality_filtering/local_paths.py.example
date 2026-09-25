@@ -1,0 +1,30 @@
+# Copy this file to local_paths.py (same folder) and fill in DATA_DIR for
+# your machine. local_paths.py is gitignored - it is never committed.
+#
+# run_pipeline.py, build_cache.py, sweep_thresholds.py, sweep_alpha_beta.py,
+# and distribution_shift.py all read this file.
+
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent / "bp_lgbm"))
+from repo_paths import (  # noqa: E402
+    FILTERING_SENSITIVITY_DIR,
+    DISTRIBUTION_ANALYSIS_DIR,
+    QUALITY_FILTERING_REPORTS_DIR,
+)
+
+# Folder containing the PulseDB/VitalDB supplementary subset .h5 files
+# (raw fiducials + features), and where this pipeline's own .h5 outputs
+# are written (per-signal quality reports, Clean_Features_*.h5 - the
+# filtered/cleaned feature sets). These are data-sized, not self-contained
+# in the repo - see dataset.txt for the download source and partition
+# names.
+DATA_DIR = Path(r"<path to PulseDB supplementary subsets>")
+
+# --- Repo-relative result folders (imported above from repo_paths) ----
+# FILTERING_SENSITIVITY_DIR   - sweep_thresholds.py / sweep_alpha_beta.py
+#                                dropped-signal JSON + summary CSVs, also
+#                                read by Scripts/bp_lgbm/Sweep_*_ML.py
+# DISTRIBUTION_ANALYSIS_DIR   - distribution_shift.py's shift_pooled_*.csv
+# QUALITY_FILTERING_REPORTS_DIR - run_pipeline.py's small xlsx/csv reports

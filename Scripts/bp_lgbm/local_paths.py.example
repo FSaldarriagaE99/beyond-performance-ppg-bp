@@ -1,0 +1,38 @@
+# Copy this file to local_paths.py (same folder) and fill in the one
+# machine-specific path below. local_paths.py is gitignored - it is
+# never committed.
+#
+# Only Scripts/bp_lgbm/ reads this file. The Layer-1 signal-processing
+# scripts under Scripts/fiducial_quality_filtering/ and Scripts/new_extraction*.py
+# do not use local_paths.py - they take their paths from constants
+# (DATA_DIR / OUTPUT_ROOT) edited directly near the top of each script; see
+# that script's module docstring.
+
+from pathlib import Path
+
+# Folder containing the PulseDB/VitalDB supplementary subset .h5 files
+# (e.g. Features_VitalDB_Train_Subset.h5, Features_VitalDB_CalFree_Test_Subset.h5,
+# and the Clean_Features_*_80.h5 / Clean_Features_*_90.h5 outputs of the
+# fiducial quality-filtering pipeline). See dataset.txt for the download
+# source and the exact partition names.
+PULSE_DB_SUP_DIR = Path(r"<path to PulseDB supplementary subsets>")
+
+# --- Result-saving folders, one per experiment family -----------------
+# These are cached artifacts (grid-search configs, SHAP caches, etc.)
+# re-read by later scripts. They resolve relative to the repo (under
+# results/) via repo_paths.py, so no machine-specific setup is needed -
+# imported here only so every script can keep importing them from
+# local_paths.
+
+from repo_paths import (
+    PERFORMANCE_RESULTS_PAPER,
+    GS_RESULT_PAPER,
+    SHAP_RESULTS_PAPER,
+    DEMOG_RESULTS_PAPER,
+    ABBLATION_RESULTS_PAPER,
+    FIGURES_PAPER,
+    DISTRIBUTION_ANALYSIS_DIR,
+    THRESHOLD_SWEEP_ML_RESULTS,
+    ALPHA_BETA_SWEEP_ML_RESULTS,
+    FILTERING_SENSITIVITY_DIR,
+)
