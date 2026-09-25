@@ -43,7 +43,7 @@ pip install -r requirements.txt
 
 ### Configuring paths
 
-Both pipeline layers under `Scripts/` (`bp_lgbm/` and `fiducial_quality_filtering/`) each have their own `local_paths.py.example` - copy it to `local_paths.py` in the same folder and fill in the one machine-specific path it asks for (where you downloaded PulseDB/VitalDB to; see `dataset.txt`). Both files are gitignored and never committed. Every other path - cached artifacts, sweep results, SHAP/grid-search outputs, figures - resolves automatically to `results/` at the repo root via `Scripts/bp_lgbm/repo_paths.py`, so nothing else needs configuring.
+`Scripts/bp_lgbm/local_paths.py` is included as the main machine-local configuration file. Edit `PULSE_DB_SUP_DIR` there to point to the PulseDB/VitalDB supplementary subset on your machine (see `dataset.txt`). The `fiducial_quality_filtering` layer has its own gitignored `local_paths.py`; copy `Scripts/fiducial_quality_filtering/local_paths.py.example` there and fill in `DATA_DIR` if you run that layer. Every other path - cached artifacts, sweep results, SHAP/grid-search outputs, figures - resolves automatically to `results/` at the repo root via `Scripts/bp_lgbm/repo_paths.py`, so nothing else needs configuring.
 
 `Scripts/new_extraction*.py` (feature extraction, upstream of both layers above) is the one exception: it does not read `local_paths.py`. Edit the `DATA_DIR` / `OUTPUT_ROOT` constants near the top of each script directly - see each script's module docstring.
 
