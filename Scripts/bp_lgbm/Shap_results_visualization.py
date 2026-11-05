@@ -20,7 +20,7 @@ if __name__ == "__main__":
     """
     res_path_80 = SHAP_RESULTS_PAPER/ "Clean_80_DS"
     """
-    res_path_orig = SHAP_RESULTS_PAPER/ "StressTest_Original"
+    res_path_orig = SHAP_RESULTS_PAPER/ "Original_DS"
 
     for target in targets:
         #------ RANK PLOTS --------------------------------------

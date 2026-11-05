@@ -16,7 +16,7 @@ import shap_analysis as sa
 from local_paths import PULSE_DB_SUP_DIR, GS_RESULT_PAPER, SHAP_RESULTS_PAPER
 from data import load_PulseDB_sup_ds
 from models import build_lgbm
-from config import ExperimentConfig, load_config, stress_test_params
+from config import load_config
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from pathlib import Path
@@ -69,16 +69,9 @@ if __name__ == "__main__":
     df_train = preprocessing.downsample_per_patient(df_train, patient_col="Subject", proportion = 0.1)
     print(df_train.info())
     """
-    # build the model
-    """
+    # build the model: generalisable configuration (the one reported in Figure 12 and Annexes 12-13)
     grid_path = GS_RESULT_PAPER / "Full_Grid_Randomized_search_3targets.json"
     cfg = load_config(grid_path)
-    """
-    cfg = ExperimentConfig(n_splits=5,
-                           random_state=42,
-                           experiment_name="Aggressive_fit_shap_Original_ds",
-                           verbose = -1,
-                           model_params=stress_test_params)
     np.random.seed(cfg.random_state)
     lgbm = build_lgbm(cfg)
 
@@ -90,7 +83,7 @@ if __name__ == "__main__":
 
     # Splitting and dropping
     id_cols = ["Subject", "Age", "Gender", "Height", "Weight", "BMI", "SF"]
-    targets = ["MAP"] #["SBP", "DBP", "MAP"]
+    targets = ["SBP", "DBP", "MAP"]
     id_cols.extend(targets)
     groups = df_train["Subject"]
     X_train = df_train.drop(columns=id_cols)
@@ -100,7 +93,7 @@ if __name__ == "__main__":
     # =========================================================
     # Shapley Analysis
     #==========================================================
-    Shap_path = SHAP_RESULTS_PAPER/"StressTest_Original"
+    Shap_path = SHAP_RESULTS_PAPER/"Original_DS"
 
     for target in targets:
         Y_t = Y_train[target]

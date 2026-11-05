@@ -7,6 +7,7 @@
 
 import pandas as pd
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import StandardScaler
 from typing import Dict, List
 import h5py
@@ -189,6 +190,33 @@ def standardize_z_score(df: pd.DataFrame, exclude_cols=None) -> pd.DataFrame:
     df_scaled[numeric_cols] = scaler.fit_transform(df[numeric_cols])
     
     return df_scaled, scaler
+
+
+class NumericOnlyScaler(BaseEstimator, TransformerMixin):
+    """
+    StandardScaler for DataFrames that leaves categorical columns untouched.
+
+    Used by the fit-biased (stress-test) LightGBM pipelines. Gender (sex) is a
+    pandas Categorical that LightGBM consumes natively, so it is deliberately
+    EXCLUDED from scaling: z-scoring a category code would be meaningless and
+    would also strip the categorical dtype. Every non-categorical column
+    (PPG features, Age, Height, Weight, BMI) is z-scored.
+
+    On an all-numeric frame (PPG only) this is identical to StandardScaler,
+    which is what Stress_test.py uses.
+    """
+
+    def fit(self, X: pd.DataFrame, y=None):
+        self.columns_ = list(X.columns)
+        self.num_cols_ = [c for c in X.columns if not isinstance(X[c].dtype, pd.CategoricalDtype)]
+        self.scaler_ = StandardScaler().fit(X[self.num_cols_]) if self.num_cols_ else None
+        return self
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        if not self.num_cols_:
+            return X
+        scaled = pd.DataFrame(self.scaler_.transform(X[self.num_cols_]), index=X.index, columns=self.num_cols_)
+        return pd.concat([scaled, X.drop(columns=self.num_cols_)], axis=1)[self.columns_]
 
 
 def check_standarization(df: pd.DataFrame):

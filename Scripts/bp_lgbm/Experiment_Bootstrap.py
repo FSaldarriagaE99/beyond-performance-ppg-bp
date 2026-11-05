@@ -42,7 +42,11 @@ FEATURE_NAMES = [
     "FullSkew", "sdPRV", "IQR_PRV",
 ]
 DEMO_FEATURES     = ["Age", "Gender", "Height", "Weight", "BMI"]
-PPG_DEMO_FEATURES = FEATURE_NAMES + DEMO_FEATURES
+# Demographics FIRST, then PPG: same column order as Experiment_PPG_Demographics.py
+# (the script behind Table 5). LightGBM's feature_fraction subsamples columns by
+# position, so the column order changes the fitted model; keep it identical
+# everywhere the PPG+demographics model is reported.
+PPG_DEMO_FEATURES = DEMO_FEATURES + FEATURE_NAMES
 
 
 if __name__ == "__main__":
@@ -147,21 +151,22 @@ if __name__ == "__main__":
     # =========================================================
     boot_metrics = {m: {t: [] for t in TARGETS} for m in models}
 
+    # A resample only changes WHICH rows (with repeats) are pulled in, never a
+    # row's prediction, so predict once on the full test set and gather per
+    # resample (numerically identical to re-predicting 1,000x, ~100x faster).
+    y_pred_full = {
+        model_key: {t: models[model_key][t].predict(test_X_map[model_key]) for t in TARGETS}
+        for model_key in models
+    }
+    y_true_full = {t: df_test[t].values for t in TARGETS}
+
     print("Running bootstrap loop...")
     for resample in tqdm(resamples, total=N_RESAMPLES):
-        sample = eval.build_bootstrap_sample(df_test, resample, subject_index)
-
-        X_boot = {
-            "ppg":      sample[FEATURE_NAMES],
-            "demo":     sample[DEMO_FEATURES],
-            "ppg_demo": sample[PPG_DEMO_FEATURES],
-        }
+        idx = np.concatenate([subject_index[s] for s in resample])
         for model_key in models:
             for target in TARGETS:
-                y_true = sample[target].values
-                y_pred = models[model_key][target].predict(X_boot[model_key])
                 boot_metrics[model_key][target].append(
-                    eval.compute_metrics(y_true, y_pred)
+                    eval.compute_metrics(y_true_full[target][idx], y_pred_full[model_key][target][idx])
                 )
 
     # =========================================================

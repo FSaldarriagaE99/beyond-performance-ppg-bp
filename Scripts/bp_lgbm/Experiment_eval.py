@@ -14,19 +14,29 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from models import build_lgbm
 
+# Which training set to fit the model on:
+#   "original" -> unfiltered training set       (results/performance/Original_DS)
+#   "clean_90" -> 90%-quality-filtered train set (results/performance/Clean_90_DS)
+# In both cases the model is evaluated on the ORIGINAL test set and on the
+# 90%-filtered test set, so the two training choices are compared on the same test data.
+DATASET = "original"
+
 if __name__ == "__main__":
 
     # =========================================================
     # Paths
     #==========================================================
-    train_original_path = PULSE_DB_SUP_DIR / "Features_VitalDB_Train_Subset.h5"
-    train_clean_path_90 = PULSE_DB_SUP_DIR / "Clean_Features_VitalDB_Train_Subset_90.h5"
-    train_clean_path_80 = PULSE_DB_SUP_DIR / "Clean_Features_VitalDB_Train_Subset_80.h5"
+    train_paths = {
+        "original": PULSE_DB_SUP_DIR / "Features_VitalDB_Train_Subset.h5",
+        "clean_90": PULSE_DB_SUP_DIR / "Clean_Features_VitalDB_Train_Subset_90.h5",
+    }
+    result_folders = {"original": "Original_DS", "clean_90": "Clean_90_DS"}
+    if DATASET not in train_paths:
+        raise ValueError(f"DATASET must be one of {list(train_paths)}, got {DATASET!r}")
 
     test_clean_path_90 = PULSE_DB_SUP_DIR / "Clean_Features_VitalDB_CalFree_Test_Subset_90.h5"
-    test_clean_path_80 = PULSE_DB_SUP_DIR/ "Clean_Features_VitalDB_CalFree_Test_Subset_80.h5"
     test_original_path = PULSE_DB_SUP_DIR / "Features_VitalDB_CalFree_Test_Subset.h5"
-    
+
     # =========================================================
     # Load Data
     #==========================================================
@@ -36,10 +46,9 @@ if __name__ == "__main__":
                  "Ad-Aa_ratio", "Ap2-Ap1_ratio", "AGI", "Kurtosis", "Skewness", 
                  "L-H_ratio", "ShannonEntropy", "Tpp", "PRV", "FullKurt", 
                  "FullSkew", "sdPRV", "IQR_PRV"]
-    df_train = load_PulseDB_sup_ds(train_clean_path_80, feature_names=feature_names)
+    df_train = load_PulseDB_sup_ds(train_paths[DATASET], feature_names=feature_names)
     df_test = load_PulseDB_sup_ds(test_original_path, feature_names=feature_names)
     df_test_90 = load_PulseDB_sup_ds(test_clean_path_90, feature_names=feature_names)
-    df_test_80 = load_PulseDB_sup_ds(test_clean_path_80, feature_names=feature_names)
     print(len(df_train["Subject"].unique()))
     # =========================================================
     # Check NaNs and fill them
@@ -61,8 +70,7 @@ if __name__ == "__main__":
     """
     print("Original testing set has NaN?:", df_test.isna().any().any())
     print("90 % clean testing set has NaN?:", df_test_90.isna().any().any())
-    print("80 % clean testing set has NaN?:", df_test_80.isna().any().any())
-    
+
     """
     # =========================================================
     # Gender as categorical
@@ -70,7 +78,6 @@ if __name__ == "__main__":
     df_train["Gender"] = df_train["Gender"].astype("category")
     df_test["Gender"] = df_test["Gender"].astype("category")
     df_test_90["Gender"] = df_test_90["Gender"].astype("category")
-    df_test_80["Gender"] = df_test_80["Gender"].astype("category")
 
     # =========================================================
     # Initialize model
@@ -88,12 +95,10 @@ if __name__ == "__main__":
     groups = df_train["Subject"]
     X_train = df_train.drop(columns=id_cols)
     X_test = df_test.drop(columns=id_cols)
-    X_test_80 = df_test_80.drop(columns=id_cols)
     X_test_90 = df_test_90.drop(columns=id_cols)
 
     Y_train = df_train[targets]
     Y_test = df_test[targets]
-    Y_test_80 = df_test_80[targets]
     Y_test_90 = df_test_90[targets]
 
     # build the model
@@ -115,7 +120,6 @@ if __name__ == "__main__":
     X_train = X_train.drop(columns=["Subject"])
     X_val = X_val.drop(columns=["Subject"])
     X_test = X_test.drop(columns=["Subject"])
-    X_test_80 = X_test_80.drop(columns=["Subject"])
     X_test_90 = X_test_90.drop(columns=["Subject"])
     #X_sub_train = X_sub_train.drop(columns=["Subject"])
 
@@ -132,7 +136,6 @@ if __name__ == "__main__":
         Y_tr = Y_train[target]
         Y_v = Y_val[target]
         Y_t = Y_test[target]
-        Y_t80 = Y_test_80[target]
         Y_t90 = Y_test_90[target]
         #Y_tr_sub = Y_sub_train[target]
 
@@ -144,11 +147,10 @@ if __name__ == "__main__":
         Y_val_pred = lgbm.predict(X_val)
         Y_pred = lgbm.predict(X_test)
         #Y_tr_sub_pred = lgbm.predict(X_sub_train)
-        Y_t_80_pred = lgbm.predict(X_test_80)
         Y_t_90_pred = lgbm.predict(X_test_90)
 
         # Eval
-        Path_res = PERFORMANCE_RESULTS_PAPER / r"Clean_80_DS"
+        Path_res = PERFORMANCE_RESULTS_PAPER / result_folders[DATASET]
         metrics_train = eval.evaluate(Y_tr, Y_pred_tr, 
                                              BA_path=Path_res / f"BA_train_subset_{target}.png",
                                              R2_path= Path_res / f"R2_train_subset_{target}.png")
@@ -158,19 +160,15 @@ if __name__ == "__main__":
         metrics_test_original = eval.evaluate(Y_t, Y_pred, 
                                               BA_path=Path_res / f"BA_test_original_{target}.png",
                                               R2_path= Path_res / f"R2_test_original_{target}.png")
-        metrics_test_80 = eval.evaluate(Y_t80, Y_t_80_pred, 
-                                              BA_path=Path_res / f"BA_test_80_{target}.png",
-                                              R2_path= Path_res / f"R2_test_80_{target}.png")
-        metrics_test_90 = eval.evaluate(Y_t90, Y_t_90_pred, 
+        metrics_test_90 = eval.evaluate(Y_t90, Y_t_90_pred,
                                               BA_path=Path_res / f"BA_test_90_{target}.png",
-                                              R2_path= Path_res / f"R2_test_80_{target}.png")
+                                              R2_path= Path_res / f"R2_test_90_{target}.png")
         
         # Create dict for saving results
         results = {
             "Train": metrics_train,
             "Val": metrics_val,
             "Test_original": metrics_test_original,
-            "Test_80": metrics_test_80,
             "Test_90": metrics_test_90
         }
         eval.save_results_dict(results, Path_res/ f"Results_{target}.csv", "Data_Subset")
@@ -184,6 +182,4 @@ if __name__ == "__main__":
         print(metrics_test_original, "\n")
         print(f"=== Results for {target}, in TEST at 90% cleaning ===")
         print(metrics_test_90, "\n")
-        print(f"=== Results for {target}, in TEST at 80% cleaning===")
-        print(metrics_test_80, "\n")
         

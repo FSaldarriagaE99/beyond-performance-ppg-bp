@@ -4,6 +4,8 @@ Code accompanying the paper above: non-invasive blood pressure (BP) estimation f
 
 This repository accompanies the paper's Code Availability statement: preprocessing and feature extraction settings, the quality-control implementation, model configurations and hyperparameter search, and the bootstrap and equivalence testing procedures used throughout the paper and its annex.
 
+To find the script behind a given table, figure or annex, see [`MANIFEST.md`](MANIFEST.md).
+
 ## Repository layout
 
 ```

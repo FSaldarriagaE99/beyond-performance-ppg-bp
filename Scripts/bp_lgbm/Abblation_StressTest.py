@@ -99,17 +99,12 @@ if __name__ == "__main__":
     counts = X_val["Subject"].value_counts()
     print(counts)
     """
-    #-----------------------------------------
-    # Just for diagnosing the model
-    #-----------------------------------------
-    _, X_sub_train, _, Y_sub_train = train_test_split(X_train, Y_train, test_size=0.1, random_state=cfg.random_state, shuffle=True, stratify=X_train["Subject"])
-
+    # Train metrics use the FULL fit set (X_train), never a 10% subsample.
     X_train = X_train.drop(columns=["Subject"])
     X_val = X_val.drop(columns=["Subject"])
     X_test = X_test.drop(columns=["Subject"])
     X_test_80 = X_test_80.drop(columns=["Subject"])
     X_test_90 = X_test_90.drop(columns=["Subject"])
-    X_sub_train = X_sub_train.drop(columns=["Subject"])
 
     # build the pipeline
     pipeline = Pipeline([
@@ -126,7 +121,6 @@ if __name__ == "__main__":
         Y_t = Y_test[target]
         Y_t80 = Y_test_80[target]
         Y_t90 = Y_test_90[target]
-        Y_tr_sub = Y_sub_train[target]
 
         # Train
         lgbm.fit(X_train, Y_tr)                               
@@ -134,13 +128,13 @@ if __name__ == "__main__":
         # Pred
         Y_val_pred = lgbm.predict(X_val)
         Y_pred = lgbm.predict(X_test)
-        Y_tr_sub_pred = lgbm.predict(X_sub_train)
+        Y_tr_pred = lgbm.predict(X_train)
         Y_t_80_pred = lgbm.predict(X_test_80)
         Y_t_90_pred = lgbm.predict(X_test_90)
 
         # Eval
         Path_res = ABBLATION_RESULTS_PAPER / r"Stress_Reduced_Testing"
-        metrics_train = eval.evaluate(Y_tr_sub, Y_tr_sub_pred, 
+        metrics_train = eval.evaluate(Y_tr, Y_tr_pred,
                                              BA_path=Path_res / f"BA_train_subset_{target}.png",
                                              R2_path= Path_res / f"R2_train_subset_{target}.png")
         metrics_val = eval.evaluate(Y_v, Y_val_pred, 

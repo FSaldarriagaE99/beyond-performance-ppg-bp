@@ -60,6 +60,7 @@ def bland_altman_plot(y_true: np.ndarray, y_pred: np.ndarray, path: str = "bland
 
     plt.legend(loc="best", frameon=True, fontsize=10)
     plt.tight_layout()
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(path, bbox_inches="tight")
     plt.close()
 
@@ -112,6 +113,7 @@ def r2_plot(y_true: np.ndarray, y_pred: np.ndarray, path: str = "r2_plot.png"):
     plt.legend([f"R² = {r2:.3f}", f"±1 SD = {spread:.2f}"], loc="best", frameon=True, fontsize=10)
 
     plt.tight_layout()
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(path, bbox_inches="tight")
     plt.close()
 
@@ -421,6 +423,7 @@ def save_results_dict(res_dict: dict, save_path: str, subset_col: str = "subset"
     df.rename(columns={"index": subset_col}, inplace=True)
 
     # Save to CSV
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(save_path, index=False)
 
     print(f"Results saved to {save_path}")

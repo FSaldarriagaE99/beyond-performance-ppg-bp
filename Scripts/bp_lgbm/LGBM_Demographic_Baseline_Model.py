@@ -80,11 +80,7 @@ if __name__ == "__main__":
         test_size=0.1, random_state=cfg.random_state, shuffle=True,
         stratify=df_train["Subject"],
     )
-    _, X_sub_train, _, Y_sub_train = train_test_split(
-        X_train, Y_train,
-        test_size=0.1, random_state=cfg.random_state, shuffle=True,
-        stratify=df_train.loc[X_train.index, "Subject"],
-    )
+    # Train metrics are computed on the FULL fit set (X_train), never on a 10% subsample.
 
     # =========================================================
     # Train and evaluate per target
@@ -92,12 +88,12 @@ if __name__ == "__main__":
     for target in targets:
         lgbm.fit(X_train, Y_train[target])
 
-        Y_tr_sub_pred = lgbm.predict(X_sub_train)
+        Y_tr_pred     = lgbm.predict(X_train)
         Y_val_pred    = lgbm.predict(X_val)
         Y_test_pred   = lgbm.predict(X_test)
 
         metrics_train = eval.evaluate(
-            Y_sub_train[target].values, Y_tr_sub_pred,
+            Y_train[target].values, Y_tr_pred,
             BA_path=res_path / f"BA_train_subset_{target}.png",
             R2_path=res_path / f"R2_train_subset_{target}.png",
         )
